@@ -5,11 +5,11 @@
 #include "chip.h"
 #include <cr_section_macros.h>
 
-#define TICKBASE_HZ (1000)
-#define PERIOD      (1000)
+#define TICKBASE_HZ      (1000)
+#define PERIOD           (1000)
 #define TICKS_PER_SECOND (1000)
 
-struct seconds_clock_state {
+struct seconds_clock {
   unsigned int seconds;
   unsigned int ticks;
 };
@@ -39,14 +39,14 @@ unsigned int handleLedCycle(unsigned int * time)
   return time;
 }
 
-void secondsClockUpdate(struct seconds_clock_state * state)
+void secondsClockUpdate(struct seconds_clock * clock)
 {
-  if(state->ticks >= TICKS_PER_SECOND) {
-    state->seconds++;
-    state->ticks = 0;
+  if(clock->ticks >= TICKS_PER_SECOND) {
+    clock->seconds++;
+    clock->ticks = 0;
   }
   else {
-    state->ticks++;
+    clock->ticks++;
   }
 }
 
@@ -57,19 +57,18 @@ int main(void) {
   Chip_GPIO_SetPinDIROutput(LPC_GPIO, 0, 22);
 
   unsigned int led_time = 0;
-  struct seconds_clock_state seconds_clock = {.seconds = 0, .ticks = 0};
+  struct seconds_clock clock = {.seconds = 0, .ticks = 0};
 
   while(1) {
     if(systick) {
       systick = 0;
 
       handleLedCycle(&led_time);
-      secondsClockUpdate(&seconds_clock);
+      secondsClockUpdate(&clock);
 
       // Every 5s
-      if(seconds_clock.seconds == 5) {
+      if((clock.seconds != 0) && (clock.seconds % 5 == 0)) {
         // Increase led toggle frequency
-        seconds_clock.seconds++;
       }
     }
   }
